@@ -1,49 +1,45 @@
-from flask import Flask, jsonify, request, render_template_string
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+from flask import Flask, request, jsonify
+import hmac
+import hashlib
 
 app = Flask(__name__)
 
-# A simple in-memory structure to store tasks
-tasks = []
+def get_x_signature_exchange_poin(
+    package_code: str,
+    token_confirmation: str,
+    path: str,
+    method: str,
+    timestamp: int,
+) -> str:
+    hash_str = "ae-hei_9Tee6he+Ik3Gais5="
+    hmac_sha512_key = "J1WaShQPHJ1QCK0L77HvuZRaP4XkZ7uiutvazkKPMC7cUP0rz28X8r5Cicnh7BZharamWxDt9nRG5DbjvuF7wG53TeJaPFwNzExCJCuAcEmA8h2tX5XgY43203fHSux6"
+    key = f"{hmac_sha512_key};{timestamp}#{hash_str};{method};{path};{timestamp}"
+    msg = f"{token_confirmation};{timestamp};{package_code};"
 
-@app.route('/', methods=['GET'])
-def home():
-    # Display existing tasks and a form to add a new task
-    html = '''
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Todo List</title>
-</head>
-<body>
-    <h1>Todo List</h1>
-    <form action="/add" method="POST">
-        <input type="text" name="task" placeholder="Enter a new task">
-        <input type="submit" value="Add Task">
-    </form>
-    <ul>
-        {% for task in tasks %}
-        <li>{{ task }} <a href="/delete/{{ loop.index0 }}">x</a></li>
-        {% endfor %}
-    </ul>
-</body>
-</html>
-'''
-    return render_template_string(html, tasks=tasks)
+    signature = hmac.new(
+        key.encode("utf-8"),
+        msg.encode("utf-8"),
+        hashlib.sha512
+    ).hexdigest()
+    return signature
 
-@app.route('/add', methods=['POST'])
-def add_task():
-    # Add a new task from the form data
-    task = request.form.get('task')
-    if task:
-        tasks.append(task)
-    return home()
+@app.route("/get-signature-point", methods=["POST"])
+def api_get_signature():
+    try:
+        data = request.get_json(force=True)
+        signature = get_x_signature_exchange_poin(
+            package_code=data["package_code"],
+            token_confirmation=data["token_confirmation"],
+            path=data["path"],
+            method=data["method"],
+            timestamp=int(data["timestamp"])
+        )
+        return jsonify({"signature": signature}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
 
-@app.route('/delete/<int:index>', methods=['GET'])
-def delete_task(index):
-    # Delete a task based on its index
-    if index < len(tasks):
-        tasks.pop(index)
-    return home()
-
-if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0')
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=80, debug=True)
