@@ -14,7 +14,7 @@ def get_x_signature_exchange_poin(
     hash_str = "ae-hei_9Tee6he+Ik3Gais5="
     hmac_sha512_key = "J1WaShQPHJ1QCK0L77HvuZRaP4XkZ7uiutvazkKPMC7cUP0rz28X8r5Cicnh7BZharamWxDt9nRG5DbjvuF7wG53TeJaPFwNzExCJCuAcEmA8h2tX5XgY43203fHSux6"
     key = f"{hmac_sha512_key};{timestamp}#{hash_str};{method};{path};{timestamp}"
-    msg = f"{token_confirmation};{timestamp};{package_code};"
+    msg = f"{token_payment};{timestamp};{package_code};"
 
     signature = hmac.new(
         key.encode("utf-8"),
@@ -29,7 +29,7 @@ def api_get_signature():
         data = request.get_json(force=True)
         signature = get_x_signature_exchange_poin(
             package_code=data["package_code"],
-            token_confirmation=data["token_confirmation"],
+            token_payment=data["token_payment"],
             path=data["path"],
             method=data["method"],
             timestamp=int(data["timestamp"])
