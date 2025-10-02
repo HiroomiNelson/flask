@@ -9,7 +9,7 @@ app = Flask(__name__)
 
 def get_x_signature_exchange_poin(
     package_code: str,
-    token_confirmation: str,
+    token_payment: str,
     path: str,
     method: str,
     timestamp: int,
